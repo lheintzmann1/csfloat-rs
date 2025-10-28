@@ -1,0 +1,22 @@
+[package]
+name = "csfloat-rs"
+version = "0.1.0"
+edition = "2024"
+authors = ["Lucas Heintzmann <lheintzmann1@disroot.org>"]
+license = "MIT OR Apache-2.0"
+description = "An unofficial asynchronous Rust client for the CSFloat API"
+repository = "https://github.com/lheintzmann1/csfloat-rs"
+keywords = ["csfloat", "csgo", "cs2", "trading", "api"]
+categories = ["api-bindings", "asynchronous"]
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json", "socks"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+thiserror = "2.0.17"
+url = "2.5"
+
+[dev-dependencies]
+tokio-test = "0.4"
+dotenvy = "0.15"
