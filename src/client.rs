@@ -1,8 +1,7 @@
 use crate::error::{Error, Result};
 use crate::models::*;
-use reqwest::{Client as HttpClient, Method, Proxy, RequestBuilder};
+use reqwest::{Client as HttpClient, Method, Proxy};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 const API_URL: &str = "https://csfloat.com/api/v1";
 
@@ -48,7 +47,7 @@ impl Client {
         path: &str,
         json_body: Option<&impl Serialize>,
     ) -> Result<T> {
-        let url = format!("{}{}", API_URL, path);
+        let url = format!("{API_URL}{path}");
         
         let mut request = self
             .http_client
@@ -100,7 +99,7 @@ impl Client {
 
     /// Get transactions
     pub async fn get_transactions(&self, page: u32, limit: u32) -> Result<serde_json::Value> {
-        let path = format!("/me/transactions?page={}&limit={}&order=desc", page, limit);
+        let path = format!("/me/transactions?page={page}&limit={limit}&order=desc");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
@@ -112,25 +111,25 @@ impl Client {
 
     /// Get pending trades
     pub async fn get_pending_trades(&self, limit: u32, page: u32) -> Result<serde_json::Value> {
-        let path = format!("/me/trades?state=pending&limit={}&page={}", limit, page);
+        let path = format!("/me/trades?state=pending&limit={limit}&page={page}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Get similar listings
     pub async fn get_similar(&self, listing_id: &str) -> Result<Vec<Listing>> {
-        let path = format!("/listings/{}/similar", listing_id);
+        let path = format!("/listings/{listing_id}/similar");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Get buy orders for a listing
     pub async fn get_buy_orders(&self, listing_id: &str, limit: u32) -> Result<Vec<BuyOrder>> {
-        let path = format!("/listings/{}/buy-orders?limit={}", listing_id, limit);
+        let path = format!("/listings/{listing_id}/buy-orders?limit={limit}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Get user's own buy orders
     pub async fn get_my_buy_orders(&self, page: u32, limit: u32) -> Result<serde_json::Value> {
-        let path = format!("/me/buy-orders?page={}&limit={}&order=desc", page, limit);
+        let path = format!("/me/buy-orders?page={page}&limit={limit}&order=desc");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
@@ -140,9 +139,9 @@ impl Client {
         market_hash_name: &str,
         paint_index: Option<i32>,
     ) -> Result<serde_json::Value> {
-        let mut path = format!("/history/{}/sales", market_hash_name);
+        let mut path = format!("/history/{market_hash_name}/sales");
         if let Some(idx) = paint_index {
-            path.push_str(&format!("?paint_index={}", idx));
+            path.push_str(&format!("?paint_index={idx}"));
         }
         self.request(Method::GET, &path, None::<&()>).await
     }
@@ -154,13 +153,13 @@ impl Client {
 
     /// Get specific listing
     pub async fn get_specific_listing(&self, listing_id: &str) -> Result<Listing> {
-        let path = format!("/listings/{}", listing_id);
+        let path = format!("/listings/{listing_id}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Get user's stall
     pub async fn get_stall(&self, user_id: &str, limit: u32) -> Result<Stall> {
-        let path = format!("/users/{}/stall?limit={}", user_id, limit);
+        let path = format!("/users/{user_id}/stall?limit={limit}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
@@ -172,13 +171,13 @@ impl Client {
 
     /// Get watchlist
     pub async fn get_watchlist(&self, limit: u32) -> Result<serde_json::Value> {
-        let path = format!("/me/watchlist?limit={}", limit);
+        let path = format!("/me/watchlist?limit={limit}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Get offers
     pub async fn get_offers(&self, limit: u32) -> Result<serde_json::Value> {
-        let path = format!("/me/offers-timeline?limit={}", limit);
+        let path = format!("/me/offers-timeline?limit={limit}");
         self.request(Method::GET, &path, None::<&()>).await
     }
 
@@ -191,27 +190,26 @@ impl Client {
     ) -> Result<serde_json::Value> {
         let role_str = role.as_str();
         let path = format!(
-            "/me/trades?role={}&state=failed,cancelled,verified&limit={}&page={}",
-            role_str, limit, page
+            "/me/trades?role={role_str}&state=failed,cancelled,verified&limit={limit}&page={page}"
         );
         self.request(Method::GET, &path, None::<&()>).await
     }
 
     /// Delete a listing
     pub async fn delete_listing(&self, listing_id: &str) -> Result<serde_json::Value> {
-        let path = format!("/listings/{}", listing_id);
+        let path = format!("/listings/{listing_id}");
         self.request(Method::DELETE, &path, None::<&()>).await
     }
 
     /// Delete a buy order
     pub async fn delete_buy_order(&self, id: &str) -> Result<serde_json::Value> {
-        let path = format!("/buy-orders/{}", id);
+        let path = format!("/buy-orders/{id}");
         self.request(Method::DELETE, &path, None::<&()>).await
     }
 
     /// Delete from watchlist
     pub async fn delete_watchlist(&self, id: i64) -> Result<serde_json::Value> {
-        let path = format!("/listings/{}/watchlist", id);
+        let path = format!("/listings/{id}/watchlist");
         self.request(Method::DELETE, &path, None::<&()>).await
     }
 
@@ -258,7 +256,7 @@ impl Client {
     /// Update listing price
     pub async fn update_listing_price(&self, listing_id: &str, price: i32) -> Result<serde_json::Value> {
         let request = UpdatePriceRequest { price };
-        let path = format!("/listings/{}", listing_id);
+        let path = format!("/listings/{listing_id}");
         self.request(Method::PATCH, &path, Some(&request))
             .await
     }
@@ -398,13 +396,13 @@ impl<'a> ListingsRequestBuilder<'a> {
         );
 
         if let Some(cursor) = &self.cursor {
-            path.push_str(&format!("&cursor={}", cursor));
+            path.push_str(&format!("&cursor={cursor}"));
         }
         if let Some(min) = self.min_price {
-            path.push_str(&format!("&min_price={}", min));
+            path.push_str(&format!("&min_price={min}"));
         }
         if let Some(max) = self.max_price {
-            path.push_str(&format!("&max_price={}", max));
+            path.push_str(&format!("&max_price={max}"));
         }
         if let Some(indices) = &self.def_index {
             let indices_str = indices
@@ -412,31 +410,31 @@ impl<'a> ListingsRequestBuilder<'a> {
                 .map(|i| i.to_string())
                 .collect::<Vec<_>>()
                 .join(",");
-            path.push_str(&format!("&def_index={}", indices_str));
+            path.push_str(&format!("&def_index={indices_str}"));
         }
         if let Some(min) = self.min_float {
-            path.push_str(&format!("&min_float={}", min));
+            path.push_str(&format!("&min_float={min}"));
         }
         if let Some(max) = self.max_float {
-            path.push_str(&format!("&max_float={}", max));
+            path.push_str(&format!("&max_float={max}"));
         }
         if let Some(r) = &self.rarity {
-            path.push_str(&format!("&rarity={}", r));
+            path.push_str(&format!("&rarity={r}"));
         }
         if let Some(seed) = self.paint_seed {
-            path.push_str(&format!("&paint_seed={}", seed));
+            path.push_str(&format!("&paint_seed={seed}"));
         }
         if let Some(idx) = self.paint_index {
-            path.push_str(&format!("&paint_index={}", idx));
+            path.push_str(&format!("&paint_index={idx}"));
         }
         if let Some(id) = &self.user_id {
-            path.push_str(&format!("&user_id={}", id));
+            path.push_str(&format!("&user_id={id}"));
         }
         if let Some(col) = &self.collection {
-            path.push_str(&format!("&collection={}", col));
+            path.push_str(&format!("&collection={col}"));
         }
         if let Some(name) = &self.market_hash_name {
-            path.push_str(&format!("&market_hash_name={}", name));
+            path.push_str(&format!("&market_hash_name={name}"));
         }
 
         self.client
