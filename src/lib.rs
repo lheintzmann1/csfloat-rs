@@ -31,7 +31,7 @@
 //!         .send()
 //!         .await?;
 //!     
-//!     for listing in listings.listings {
+//!     for listing in listings.listings() {
 //!         println!("ID: {}, Price: {} cents", listing.id, listing.price);
 //!     }
 //!     
