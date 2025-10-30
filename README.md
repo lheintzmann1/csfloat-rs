@@ -14,6 +14,7 @@ An **unofficial**, **asynchronous** Rust library for interacting with the [CSFlo
 * **Fetch listings**: Retrieve detailed listings with filters (price in cents, float, rarity, etc.).
 * **Buy orders**: Get and manage buy orders for specific items.
 * **User information**: Access your own profile, trades, and stall data.
+* **Weapon pricing schema**: Get average prices for all weapon skins across different wear conditions.
 * **Listing management**: Create, delete, and modify listings and buy orders.
 * **Proxy support**: Optional SOCKS4/5 and HTTP(S) proxy support.
 * **Error handling**: Clear error types with descriptive messages.
@@ -177,6 +178,72 @@ async fn main() -> Result<()> {
 }
 ```
 
+### Get Weapon Pricing Schema
+
+```rust
+use csfloat_rs::{Client, models::WearCondition};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = Client::new("YOUR_API_KEY")?;
+    
+    // Get the complete schema with weapon pricing data
+    let schema = client.get_schema().await?;
+    
+    println!("Total weapons: {}", schema.weapons.len());
+    
+    // Find AK-47 Redline pricing
+    if let Some((_, ak47)) = schema.get_weapon_by_name("AK-47") {
+        if let Some(redline) = ak47.get_paint_by_name("Redline") {
+            println!("AK-47 Redline prices:");
+            
+            // Normal prices by wear condition
+            for wear in [WearCondition::FactoryNew, WearCondition::MinimalWear, 
+                        WearCondition::FieldTested, WearCondition::WellWorn, 
+                        WearCondition::BattleScarred] {
+                if let Some(price) = redline.price_for_wear(wear) {
+                    if let Some(volume) = redline.volume_for_wear(wear) {
+                        println!("  {} - ${:.2} (Volume: {})", 
+                            wear.as_str(), price as f64 / 100.0, volume);
+                    }
+                }
+            }
+            
+            // StatTrak prices if available
+            if redline.has_stattrak() {
+                println!("StatTrak prices:");
+                for wear in [WearCondition::MinimalWear, WearCondition::FieldTested] {
+                    if let Some(price) = redline.stattrak_price_for_wear(wear) {
+                        println!("  StatTrak {} - ${:.2}", 
+                            wear.as_str(), price as f64 / 100.0);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Find most expensive skins
+    let mut expensive_skins: Vec<(&str, &str, u64)> = Vec::new();
+    for (_, weapon) in &schema.weapons {
+        for paint in weapon.paints.values() {
+            if let Some(price) = paint.price_for_wear(WearCondition::FactoryNew) {
+                if price > 100000 { // Over $1000
+                    expensive_skins.push((&weapon.name, &paint.name, price));
+                }
+            }
+        }
+    }
+    
+    expensive_skins.sort_by(|a, b| b.2.cmp(&a.2));
+    println!("Most expensive Factory New skins:");
+    for (weapon, skin, price) in expensive_skins.iter().take(5) {
+        println!("  {} | {} - ${:.2}", weapon, skin, *price as f64 / 100.0);
+    }
+    
+    Ok(())
+}
+```
+
 ### Pagination
 
 ```rust
@@ -216,6 +283,7 @@ async fn main() -> Result<()> {
 ### Market Data
 
 * `get_exchange_rates()` – Retrieve current exchange rates.
+* `get_schema()` – Get weapon pricing schema with average prices (undocumented endpoint).
 * `get_all_listings()` – List items with optional filters (returns builder).
 * `get_specific_listing(listing_id)` – Get detailed info for a specific listing.
 * `get_similar(listing_id)` – Get similar listings.

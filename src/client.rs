@@ -146,6 +146,12 @@ impl Client {
         self.request(Method::GET, &path, None::<&()>).await
     }
 
+    /// Get schema with weapon pricing data
+    /// This endpoint returns average prices for each skin in different wear conditions
+    pub async fn get_schema(&self) -> Result<SchemaResponse> {
+        self.request(Method::GET, "/schema", None::<&()>).await
+    }
+
     /// Get all listings with builder pattern
     pub fn get_all_listings(&self) -> ListingsRequestBuilder {
         ListingsRequestBuilder::new(self)

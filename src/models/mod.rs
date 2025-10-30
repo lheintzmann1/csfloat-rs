@@ -8,6 +8,7 @@ pub mod me;
 pub mod stall;
 pub mod auction;
 pub mod statistics;
+pub mod schema;
 
 pub use listing::Listing;
 pub use item::Item;
@@ -19,6 +20,7 @@ pub use me::{Me, User, Preferences, Statistics as UserStatistics};
 pub use stall::Stall;
 pub use auction::{AuctionDetails, TopBid};
 pub use statistics::Statistics;
+pub use schema::{SchemaResponse, Weapon, Paint, Collection, WearCondition};
 
 use serde::{Deserialize, Serialize};
 
